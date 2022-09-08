@@ -10,6 +10,6 @@ The code initially started as part of the Masters project <i>"Beads on a string:
 
 
 ## Citing
-_Authors: Jiten Dhandha (jvd@cam.ac.uk), Zoe Faes(zoe.faes@esa.int), Rowan Smith_
+_Authors: Jiten Dhandha (jvd[at]cam.ac.uk), Zoe Faes (zoe.faes[at]esa.int), Rowan Smith_
 
 If you use FIESTA for a publication, please cite it as "Faes et al. (in prep)".
