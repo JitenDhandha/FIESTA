@@ -1,0 +1,15 @@
+# Byte-compiled / optimized / DLL files
+/fiesta/__pycache__/
+
+# Distribution / packaging
+/build/
+/dist/
+/sdist/
+/*.egg-info/
+/fiesta/*.egg-info/
+
+# Documentation
+/docs/build/
+
+# Extras
+*.DS_Store

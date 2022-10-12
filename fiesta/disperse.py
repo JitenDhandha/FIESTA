@@ -4,23 +4,25 @@
 # Last edited: September 2022
 ######################################################################
 
+"""
+This module contains classes for dealing with filamentary networks 
+from DisPerSE, and a variety of very useful algorithms such as
+readjusting filament spines, characterizing filament lengths and masses,
+identifying junctions/hubs in the network and more!
+"""
+
 ######################################################################
 #                            LIBRARIES                               #
 ######################################################################
 
 #Standard libs
 import numpy as np
-from scipy.interpolate import splprep
-from scipy.interpolate import splev
-from scipy.spatial.distance import euclidean
+from scipy.interpolate import splprep, splev
 from scipy.spatial import cKDTree
+from scipy.spatial.distance import euclidean
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
-#Own libs
-from .units import *
-from .physical_functions import *
 
 ######################################################################
 #                         CRITICAL POINT                             #
@@ -31,7 +33,7 @@ class CriticalPoint:
         self.idx = int
         self.pos = []
         self.nfil = int
-        self.scale = str #either "Euclidean" or "AREPO"
+        self.scale = str #either "pixel" or "AREPO"
     
 ######################################################################
 #                              FILAMENT                              #
@@ -45,7 +47,7 @@ class Filament:
         self.cps = []
         self.nsamp = int
         self.samps = [] #NOTE: The samps contain the critical points already (as first and last element)
-        self.scale = str #either "Euclidean" or "AREPO"
+        self.scale = str #either "pixel" or "AREPO"
         
         #Tools
         self.charfunc = None    #characteristic function of the filament
@@ -263,7 +265,7 @@ class BifurcationPoint:
     def __init__(self, pos, rank, scale):
         self.pos = pos
         self.rank = rank
-        self.scale = scale #either "Euclidean" or "AREPO"
+        self.scale = scale #either "pixel" or "AREPO"
         
 ######################################################################
 #                              NETWORK                               #
@@ -281,7 +283,7 @@ class Network:
         self.ntotfils = int
         self.cps = []
         self.fils = []
-        self.scale = str #either "Euclidean" or "AREPO"
+        self.scale = str #either "pixel" or "AREPO"
 
         #These are extra properties calculated if required
         self.bifurcations = []
@@ -344,7 +346,7 @@ class Network:
                 #IMPORTANT NOTE: Notice the order of l[1], l[2] and l[3].
                 #This is the discrepancy in Disperse coordinates and AREPO.
                 cp.nfil = int(critical_points_text_array[i+1]) #Setting 'nfil' here
-                cp.scale = "Euclidean" #Setting 'scale' here
+                cp.scale = "pixel" #Setting 'scale' here
                 critical_points.append(cp)
         critical_points = np.array(critical_points)
 
@@ -369,7 +371,7 @@ class Network:
                         i-=1
                         fil.samps = np.array(fil.samps)
                         fil.set_charfunc() #Setting 'charfunc' here
-                        fil.scale = "Euclidean" #Setting 'scale' here
+                        fil.scale = "pixel" #Setting 'scale' here
                         filaments.append(fil)
                         break
                     else:
@@ -387,7 +389,7 @@ class Network:
         self.ntotcps = len(critical_points)
         self.fils = filaments
         self.ntotfils = len(filaments)
-        self.scale = "Euclidean"
+        self.scale = "pixel"
 
         if(verbose):
             print("FIESTA >> Note: The Network has {} filaments and {} critical points.".format(self.ntotfils,self.ntotcps))
@@ -538,6 +540,7 @@ class Network:
         uniq_ids = np.unique([bf.pos for bf in bifurcations],return_index=True,axis=0)[1]
         bifurcations = bifurcations[uniq_ids]
 
+        # TODO: Is this correct? Shouldn't rank matter? So 1/3 for rank-3 ones?
         bifurcation_number = len(bifurcations)/2
 
         self.bifurcations = bifurcations
