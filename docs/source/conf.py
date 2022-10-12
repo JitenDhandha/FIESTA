@@ -12,6 +12,7 @@ from fiesta import __version__
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'fiesta'
+master_doc = 'index'
 version = __version__
 copyright = '2022, Jiten Dhandha, Zoe Faes, Rowan J. Smith'
 author = 'Jiten Dhandha, Zoe Faes, Rowan J. Smith'
@@ -20,6 +21,7 @@ author = 'Jiten Dhandha, Zoe Faes, Rowan J. Smith'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx_automodapi.automodapi',
+              'sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.viewcode',
               'sphinx.ext.mathjax']
