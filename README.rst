@@ -13,10 +13,12 @@ also be used more generally with other softwares through some
 modifications. It includes tools such as:
 
 1. reading and writing data
-files for the aforementioned softwares; 
+files for the aforementioned softwares;
+
 2. 2D and 3D visualizations of
 simulations and filamentary networks, along with functions for
-statistical analysis; 
+statistical analysis;
+
 3. algorithms for characterizing filament
 properties such as length, mass, density profile, and more!
 
