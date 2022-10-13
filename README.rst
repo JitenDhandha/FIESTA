@@ -10,10 +10,14 @@ primarily built for use with the multi-physics hydrodynamical code AREPO
 and the filament identification tool DisPerSE (`Sousbie,
 2011 <https://doi.org/10.1111/j.1365-2966.2011.18394.x>`__), but can
 also be used more generally with other softwares through some
-modifications. It includes tools such as: 1. reading and writing data
-files for the aforementioned softwares; 2. 2D and 3D visualizations of
+modifications. It includes tools such as:
+
+1. reading and writing data
+files for the aforementioned softwares; 
+2. 2D and 3D visualizations of
 simulations and filamentary networks, along with functions for
-statistical analysis; 3. algorithms for characterizing filament
+statistical analysis; 
+3. algorithms for characterizing filament
 properties such as length, mass, density profile, and more!
 
 Package dependencies
