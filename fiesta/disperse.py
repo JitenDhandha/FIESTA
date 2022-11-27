@@ -840,13 +840,7 @@ class Network:
 
     Attributes
     ----------
-
-        self.cps = critical_points
-        self.ncps = len(critical_points)
-        self.fils = filaments
-        self.nfils = len(filaments)
-        self.scale = "pixel"
-        
+    
     cps : `list` of `~fiesta.disperse.CriticalPoint`'s
         Array of `~fiesta.disperse.CriticalPoint`'s in the network.
 
