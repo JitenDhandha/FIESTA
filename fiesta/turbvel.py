@@ -16,10 +16,17 @@ Philipp Girichidis, but can be modified for general use.
 
 #Standard libs
 import functools
+#Numpy
 import numpy as np
+#Astropy
+from astropy import units as u
+#Matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+#FIESTA
+from fiesta import _utils as utils
 
 ######################################################################
 #                      TURBULENT VELOCITY GRID                       #
@@ -32,119 +39,115 @@ class TurbulentVelocityGrid:
 
     Attributes
     ----------
-
-    file_path : str
-        Path of turbulent velocity field file.
-        
-    size : int
+    
+    size : `int`
         Size of one axis of the turbulent velocity field where ``size**3`` encompasses the whole cube.
 
-    vx : numpy.ndarray
-        3D grid of x-component of velocity.
+    vx : `~astropy.units.Quantity`
+        3D grid of :math:`x`-component of velocity: :math:`v_x`.
 
-    vy : numpy.ndarray
-        3D grid of y-component of velocity.
+    vy : `~astropy.units.Quantity`
+        3D grid of :math:`y`-component of velocity: :math:`v_y`.
 
-    vz : numpy.ndarray
-        3D grid of z-component of velocity.
+    vz : `~astropy.units.Quantity`
+        3D grid of :math:`z`-component of velocity: :math:`v_z`.
 
     Parameters
     ----------
 
-    file_path : str, optional
-        The path of the turbulent velocity grid to read in and construct
-        the object.
+    file_path : `str`
+        File path of the turbulent velocity grid.
 
-    verbose : bool, optional
-        If ``True``, prints output during file reading.
-
-    check : bool, optional
-        If ``True``, prints middle slices of v_z.
+    verbose : `bool`, optional
+        If ``True``, prints output during file reading. Default value is ``False``.
+    
+    check : `bool`, optional
+        If ``True``, prints middle slices of `~fiesta.turbvel.TurbulentVelocityGrid.vz`.
+        Default value is ``False``.
     
     """
     
-    def __init__(self, file_path=None, verbose=False, check=False):
+    def __init__(self, file_path, verbose=False, check=False):
         
-        #Create variables
-        self.file_path = str
-        self.size = int
-        self.vx = [[[]]]
-        self.vy = [[[]]]
-        self.vz = [[[]]]
-        
-        #Set variables
-        if file_path is not None:
-            self.read_file(file_path, verbose, check)
-        
-    ######################################################################
-    #                       READ AND WRITE FUNCTIONS                     #
-    ######################################################################
-    
-    def read_file(self, file_path, verbose=False, check=False):
-        """
-        
-        Read a turbulent velocity field file.
-
-        Parameters
-        ----------
-
-        file_path : str, optional
-            The path of the turbulent velocity grid to read in and construct
-            the object.
-
-        verbose : bool, optional
-            If ``True``, prints output during file reading.
-
-        check : bool, optional
-            If ``True``, prints middle slices of ``vz``.
-
-        """
-
         #Note: the create-turbulence-field code has to be run with parameter "flt" for data types to match
         #between the numpy reading done below and the C++ code output
         if(verbose):
-            print("FIESTA >> Started reading turbulent velocity field from \"{}\" ...".format(file_path))
-        self.file_path = file_path
-        velocity_data = np.fromfile(self.file_path,'float32')
+            print(utils._prestring() + "Started reading turbulent velocity field from \"{}\" ...".format(file_path))
+        velocity_data = np.fromfile(file_path,'float32')
         if(verbose):
-            print("FIESTA >> Completed reading turbulent velocity field from \"{}\"".format(file_path))
+            print(utils._prestring() + "Completed reading turbulent velocity field from \"{}\"".format(file_path))
         
         #Splitting data into velocity components
-        self.size = int(np.cbrt(len(velocity_data)/3))
+        self.size = u.Quantity(np.cbrt(len(velocity_data)/3), copy=False, dtype=int, unit=u.pix)
         if(verbose):
-            print("FIESTA >> The grid is of size {}^3".format(self.size))
+            print(utils._prestring() + "The grid is of size {}**3".format(self.size))
         velocity_arrays = np.array_split(velocity_data, 3)
-        n = self.size
+        n = self.size.value
         vx_flat= velocity_arrays[0]
-        self.vx = np.reshape(vx_flat,(n,n,n),order='C')
+        self.vx = np.reshape(vx_flat,(n,n,n),order='C') << u.dimensionless_unscaled
         vy_flat = velocity_arrays[1]
-        self.vy = np.reshape(vy_flat,(n,n,n),order='C')
+        self.vy = np.reshape(vy_flat,(n,n,n),order='C') << u.dimensionless_unscaled
         vz_flat = velocity_arrays[2]
-        self.vz = np.reshape(vz_flat,(n,n,n),order='C')
+        self.vz = np.reshape(vz_flat,(n,n,n),order='C') << u.dimensionless_unscaled
         
         #Checking the reading of the data
         if(check):
-            print("FIESTA >> Printing data for checking below...")
+            print(utils._prestring() + "Printing data for checking below...")
             #Compare these with the dim/2 slices from the C++ code
             #Note that the slices are all for vz and correspond to dim/2 slices along each x,y,z axis
-            print("FIESTA >> Printing vz dim/2 x-slice now")
+            print(utils._prestring() + "Printing vz dim/2 x-slice now")
             print(self.vz[:,:,int(n/2)])
-            print("FIESTA >> Printing vz dim/2 y-slice now")
+            print(utils._prestring() + "Printing vz dim/2 y-slice now")
             print(self.vz[:,int(n/2),:])
-            print("FIESTA >> Printing vz dim/2 z-slice now")
+            print(utils._prestring() + "Printing vz dim/2 z-slice now")
             print(self.vz[int(n/2),:,:])
-                  
-    
+
+    ######################################################################
+    #                             GETTERS                                #
+    ######################################################################
+
+    def get_size(self):
+        """
+
+        Returns `~fiesta.turbvel.TurbulentVelocityGrid.size`.
+
+        """
+        return self.size
+
+    def get_vx(self):
+        """
+
+        Returns `~fiesta.turbvel.TurbulentVelocityGrid.vx`.
+
+        """
+        return self.vx
+
+    def get_vy(self):
+        """
+
+        Returns `~fiesta.turbvel.TurbulentVelocityGrid.vy`.
+
+        """
+        return self.vy
+
+    def get_vz(self):
+        """
+
+        Returns `~fiesta.turbvel.TurbulentVelocityGrid.vz`.
+
+        """
+        return self.vz
+
     ######################################################################
     #                         PLOTTING FUNCTIONS                         #
     ######################################################################
                   
-    def plot_projection(self,
-                        projection='z',
-                        outer_faces_only=True,
-                        cmap='RdBu',
-                        save=None,
-                        **kwargs):
+    def plot_velocity_component(self,
+                                component='z',
+                                outer_faces_only=True,
+                                cmap='RdBu',
+                                save=None,
+                                **kwargs):
 
         """
         
@@ -153,38 +156,39 @@ class TurbulentVelocityGrid:
         Parameters
         ----------
         
-        projection : str, optional
-            Velocity component to plot: ``x``, ``y`` or ``z`` (default).
+        component : `str`, optional
+            Velocity component to plot: ``x`` for :math:`v_x`, ``y`` 
+            for :math:`v_y` or ``z`` (default) for :math:`v_z`.
 
-        outer_faces_only : bool, optional
+        outer_faces_only : `bool`, optional
             If ``True`` (default), plots only the outer faces of the velocity grid
-            since a ``size**3`` scatter plot is very computationally heavy. If ``False``,
-            plots the whole grid.
+            since a ``size**3`` scatter plot is very computationally heavy. 
+            If ``False``, plots the whole grid.
 
-        cmap : str or matplotlib.colors.Colormap, optional
-            Colormap of the plot. Default is ``'RdBu'``.
+        cmap : `str` or `~matplotlib.colors.Colormap`, optional
+            Colormap of the plot. Default value is ``'RdBu'``.
 
-        save : str, optional
-            The name of the file to save the plot as. If ``None`` (default), plot is
-            not saved.
+        save : `str`, optional
+            File path to save the plot.
+            If ``None`` (default), plot is not saved.
 
-        **kwargs : dict, optional
+        **kwargs : `dict`, optional
             Additional *matplotlib*-based keyword arguments to control 
             finer details of the plot.
 
         Returns
         -------
 
-        fig : matplotlib.figure.Figure
-            Main *matplotlib.figure.Figure* instance.
-
-        ax : matplotlib.axes.Axes
-            Main *matplotlib.axes.Axes* instance.
-
-        scatter: matplotlib.axes.Axes.scatter
-            Main *matplotlib.axes.Axes.scatter* instance.
+        fig : `~matplotlib.figure.Figure`
+            Main `~matplotlib.figure.Figure` instance.
 
         """
+
+        #Shedding units for ease of use
+        n = self.size.value
+        vx = self.vx.value
+        vy = self.vy.value
+        vz = self.vz.value
 
         #Main figure
         fig = plt.figure(figsize=(10,10))
@@ -192,14 +196,6 @@ class TurbulentVelocityGrid:
             plt.setp(fig,**kwargs["figure"])
             
         ax = fig.add_subplot(111,projection='3d')
-        
-        #Axes limits
-        if "xlim" in kwargs:
-            ax.set_xlim(**kwargs["xlim"])
-        if "ylim" in kwargs:
-            ax.set_ylim(**kwargs["ylim"])
-        if "zlim" in kwargs:
-            ax.set_zlim(**kwargs["zlim"])
         
         #Axes ticks
         ax.xaxis.set_tick_params(which='major', width=1, length=5, labelsize=15)
@@ -216,9 +212,9 @@ class TurbulentVelocityGrid:
             ax.zaxis.set_tick_params(**kwargs["ytick_params"])
 
         #Axes labels
-        ax.set_xlabel(r"x",fontsize=15,labelpad=5)
-        ax.set_ylabel(r"y",fontsize=15,labelpad=5)
-        ax.set_zlabel(r"z",fontsize=15,labelpad=5)
+        ax.set_xlabel(r"$x$ [pix]",fontsize=15,labelpad=5)
+        ax.set_ylabel(r"$y$ [pix]",fontsize=15,labelpad=5)
+        ax.set_zlabel(r"$z$ [pix]",fontsize=15,labelpad=5)
         if "xlabel" in kwargs:
             ax.set_xlabel(**kwargs["xlabel"])
         if "ylabel" in kwargs:
@@ -233,14 +229,15 @@ class TurbulentVelocityGrid:
 
         ############### Plotting start ################
 
-        if(projection.lower()=='x'):
-            vel = self.vx.flatten()
-        elif(projection.lower()=='y'):
-            vel = self.vy.flatten()
-        elif(projection.lower()=='z'):
-            vel = self.vz.flatten()
+        #Projection
+        if(component=='x' or component=='X'):
+            vel = vx.flatten()
+        elif(component=='y' or component=='Y'):
+            vel = vy.flatten()
+        elif(component=='z' or component=='Z'):
+            vel = vz.flatten()
         else:
-            raise ValueError("FIESTA >> Invalid projection.")
+            raise ValueError(utils._prestring() + "Invalid component.")
 
         def cartesian_product_broadcasted(*arrays):
             """
@@ -256,8 +253,7 @@ class TurbulentVelocityGrid:
                 out[start:end] = a.reshape(-1)
                 start, end = end, end + rows
             return out.reshape(cols, rows).T
-                  
-        n = self.size
+        
         x, y, z = cartesian_product_broadcasted(*[np.arange(n, dtype='int16')]*3).T
 
         if(outer_faces_only):
@@ -267,17 +263,25 @@ class TurbulentVelocityGrid:
             z = z[mask]
             vel = vel[mask]
 
-        scatter = ax.scatter(x,y,z,c=vel,cmap=cmap)
+        scatter = ax.scatter(x, y, z, c=vel, cmap=cmap)
 
         cbar = fig.colorbar(scatter, ax=ax, fraction=0.038, pad=0.1)
-        cbar.set_label(r'Velocity projection ${}$'.format(projection), size=15, color='black')
+        cbar.set_label(r'Velocity component ${}$'.format(component), size=15, color='black')
         cbar.ax.tick_params(labelsize=15, color='black')
         cbar.outline.set_edgecolor('black')
         plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='black')
 
         ############### Plotting end ################
 
+        #Axes limits
+        if "xlim" in kwargs:
+            ax.set_xlim(**kwargs["xlim"])
+        if "ylim" in kwargs:
+            ax.set_ylim(**kwargs["ylim"])
+        if "zlim" in kwargs:
+            ax.set_zlim(**kwargs["zlim"])
+
         if save is not None:
             fig.savefig(save, bbox_inches='tight', dpi=100)
 
-        return fig, ax, scatter
+        return fig

@@ -6,15 +6,6 @@
 import numpy as np
 from numpy import uint32, uint64, float64, float32
 
-########### GENERAL STUFF  ##########
-
-io_flags = {'mc_tracer'           : True,\
-            'time_steps'          : True,\
-            'sgchem'              : True, \
-            'variable_metallicity': True,\
-            'sgchem_NL99'         : False}
-
-
 ########### SNAPSHOT FILE ##########
 
 header_names = ('num_particles', 'mass', 'time', 'redshift', 'flag_sfr', 'flag_feedback', \
@@ -70,6 +61,7 @@ def readIDs(f, count):
     f.seek(-4, 1)
 
     count = int(count)
+    #print(data_size//4,data_size//8,count)
     if data_size // 4 == count: dtype = uint32
     elif data_size // 8 == count: dtype = uint64
     else: raise Exception('Incorrect number of IDs requested')
@@ -129,7 +121,7 @@ def read_IC(filename):
   
     return data, header
 
-def read_snapshot(filename):
+def read_snapshot(filename, io_flags):
     """ Reads a binary snapshot file """
     f = open(filename, mode='rb')
     #print ("Loading file %s" % filename)
@@ -219,12 +211,12 @@ def read_image(filename):
 
 def read_vector_image(filename):
     f = open(filename, mode='rb')
-    print ("Loading file %s" % filename)
+    #print ("Loading file %s" % filename)
 
     npix_x = np.fromfile(f, uint32, 1)
     npix_y = np.fromfile(f, uint32, 1)
 
-    print (npix_x, npix_y)
+    #print (npix_x, npix_y)
     arepo_image = np.fromfile(f, float32, npix_x*npix_y*3).reshape((npix_x, npix_y,3))
     arepo_image = np.rot90(arepo_image)
     f.close()
@@ -247,15 +239,15 @@ def read_grid(filename):
     
 def read_sink_evolution_file(filename):
     f = open(filename, mode='rb')
-    print ("Loading file %s" %filename)
+    #print ("Loading file %s" %filename)
 
     time = np.fromfile(f, float64, 1)
 
-    print ("Time = ", time)
+    #print ("Time = ", time)
 
     NSinks = np.fromfile(f, uint32, 1)
 
-    print ("Number of sink particles = ", NSinks)
+    #print ("Number of sink particles = ", NSinks)
 
     SinkP = {'Pos':[],
              'Vel':[],
@@ -343,18 +335,18 @@ def writeu(f, data):
     
 ####### binary write functions #########
 
-def write_snapshot(filename, header, data):
+def write_snapshot(filename, header, data, io_flags):
     """ Write a binary snapshot file (unformatted fortran) """
     # do some checks on the header
     for name, size in zip(header_names, header_sizes):
       if name not in header:
-        print('Missing %s in header file' % name)
+        #print('Missing %s in header file' % name)
         raise Exception('Missing %s in header file' % name)
 
       if np.array(header[name]).size != size[1]:
         msg = 'Header %s should contain %d elements, %d found' % \
               (name, size[1], np.array(header[name]).size)
-        print(msg)
+        #print(msg)
         raise Exception(msg)
 
     nparts = header['num_particles']

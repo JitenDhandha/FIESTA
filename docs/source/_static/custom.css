@@ -1,0 +1,8 @@
+/* This resets the "code" formatting for external (intersphinx)
+links making them look cleaner. */
+a.reference.external > code.xref {
+    all: revert;
+    font-family: unset;
+    font-weight: normal;
+    font-style: italic;
+}

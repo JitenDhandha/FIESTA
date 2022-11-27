@@ -13,7 +13,13 @@ This module contains useful plotting routines for statistical analysis.
 ######################################################################
 
 #Standard libs
+#Numpy
 import numpy as np
+#Scipy
+from scipy.interpolate import PchipInterpolator
+#Astropy
+from astropy import units as u
+#Matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -21,19 +27,22 @@ from mpl_toolkits.mplot3d import Axes3D
 #Fiesta
 from fiesta import units as ufi
 from fiesta import arepo
+from fiesta import _utils as utils
 
 ######################################################################
 #                        plot_ndensity_PDFs                          #
 ######################################################################
 
 def plot_ndensity_PDFs(avgs,
+                       ndensity_unit=u.cm**-3,
+                       bins=None,
                        colors=None,
                        linestyles=None,
                        linewidths=None,
                        labels=None,
                        cumulative=False,
-                       fit_spline=True,
-                       only_spline=True,
+                       fit_spline=False,
+                       only_spline=False,
                        save=None,
                        **kwargs):
     """
@@ -45,61 +54,63 @@ def plot_ndensity_PDFs(avgs,
     Parameters
     ----------
 
-    avgs : list of :class:`~fiesta.arepo.ArepoVoronoiGrid`
+    avgs : `list` of `~fiesta.arepo.ArepoVoronoiGrid`'s
         The list of AREPO Voronoi grid instances to plot the PDFs/CDFs of.
 
-    colors: list, optional
+    ndensity_unit :  `~astropy.units.Unit`, optional
+        The unit of number density to use. Default value is ``u.cm**-3``.
+
+    bins: `list`, optional
+        The number of bins corresponding to each PDF/CDF. If ``None``
+        (default), they are set to ``25``.
+
+    colors: `list`, optional
         A list of *matplotlib*-compatible color strings corresponding
-        to each line plotted. If ``None`` (default), they are set in accordance with
-        *matplotlib* tab10 colour palette.
+        to each line plotted. If ``None`` (default), colors are picked
+        by cycling through *matplotlib* tab10 colour palette.
 
-    linestyles : list, optional
+    linestyles : `list`, optional
         A list of *matplotlib*-compatible linestyle strings corresponding
-        to each line plotted. If ``None`` (default), they are set to solid.
+        to each line plotted. If ``None`` (default), they are set to ``-``.
 
-    linewidths : list, optional
+    linewidths : `list`, optional
         A list of linewidths corresponding to each line plotted. 
-        If ``None`` (default), they are set to 1.5.
+        If ``None`` (default), they are set to ``1.5``.
 
-    labels : list, optional
+    labels : `list`, optional
         A list of labels corresponding to each line plotted.
         If ``None`` (default), they are numbered ``1, ..., n``.
 
-    cumulative : bool, optional
+    cumulative : `bool`, optional
         If ``True``, plots the CDF, else plots the PDF.
+        Default value is ``False``.
 
-    fit_spline : bool, optional
+    fit_spline : `bool`, optional
         If ``True``, fits a spline interpolator through each PDF/CDF
-        histogram.
+        histogram. Default value is ``False``.
 
-    only_spline : bool, optional
+    only_spline : `bool`, optional
         If ``True``, plots only the spline interpolator and not the 
-        PDF/CDF histograms.
+        PDF/CDF histograms. Default value is ``False``.
 
-    save : str, optional
-        The name of the file to save the plot as. If ``None`` (default), plot is
-        not saved.
+    save : `str`, optional
+        File path to save the plot.
+        If ``None`` (default), plot is not saved.
 
-    **kwargs : dict, optional
+    **kwargs : `dict`, optional
         Additional *matplotlib*-based keyword arguments to control 
         finer details of the plot.
 
     Returns
     -------
 
-    fig : matplotlib.figure.Figure
-        Main *matplotlib.figure.Figure* instance.
-
-    ax : matplotlib.axes.Axes
-        Main *matplotlib.axes.Axes* instance.
-
-    bars : list
-        List of *matplotlib.container.BarContainer* instances.
-
-    lines : list
-        List of *matplotlib.lines.Line2D* instances.
+    fig : `~matplotlib.figure.Figure`
+        Main `~matplotlib.figure.Figure` instance.
 
     """
+
+    #Check unit
+    utils.check_unit(ndensity_unit, u.cm**-3)
 
     #Figure properties
     nsols = len(avgs)
@@ -112,6 +123,8 @@ def plot_ndensity_PDFs(avgs,
         linewidths = [1.5]*nsols
     if labels is None:
         labels = [fr"${i}$" for i in np.arange(1,nsols+1)]
+    if bins is None:
+        bins = [25]*nsols
 
     #Main figure
     fig = plt.figure(figsize=(8,8))
@@ -123,14 +136,6 @@ def plot_ndensity_PDFs(avgs,
     #Grid
     if "grid" in kwargs:
         ax.grid(**kwargs["grid"])
-    
-    #Axes limits
-    ax.set_xlim(-2,6)
-    ax.set_ylim(1e-3,1)
-    if "xlim" in kwargs:
-        ax.set_xlim(**kwargs["xlim"])
-    if "ylim" in kwargs:
-        ax.set_ylim(**kwargs["ylim"])
         
     #Axes scales
     ax.set_yscale('log')
@@ -152,7 +157,7 @@ def plot_ndensity_PDFs(avgs,
         ax.tick_params(**kwargs["tick_params"])
      
     #Axes labels
-    ax.set_xlabel(r"log(n) [cm$^{-3}$]",fontsize=15)
+    ax.set_xlabel(r"Number density log($n$) [{}]".format(ndensity_unit.to_string()),fontsize=15)
     if(cumulative):
         ax.set_ylabel(r"Cumulative probability density",fontsize=15)
     else:
@@ -172,12 +177,12 @@ def plot_ndensity_PDFs(avgs,
     bars = []
     lines = []
         
-    for avg, c, ls, lw, la in zip(avgs, colors, linestyles, linewidths, labels):
+    for avg, bin, c, ls, lw, la in zip(avgs, bins, colors, linestyles, linewidths, labels):
         
-        ndens = avg.get_ndensity()
-        mass = avg.mass[avg.gas_ids]
+        ndens = avg.get_ndensity().to_value(ndensity_unit)
+        mass = avg.mass[avg.gas_ids].to_value(u.g)
         log_ndens = np.log10(ndens, out=np.zeros_like(ndens), where=(ndens>0))
-        hist, bin_edges = np.histogram(log_ndens, bins=25, weights=mass, density=True)
+        hist, bin_edges = np.histogram(log_ndens, bins=bin, weights=mass, density=True)
 
         #mass-weighted PDF of the density distribution (see Burkhart, 2018)
         #rho_avg = np.average(AVG.rho,weights=AVG.mass[AVG.gas_ids])
@@ -200,8 +205,6 @@ def plot_ndensity_PDFs(avgs,
         #Fitting cubic spline to the whole PDF
         if(fit_spline):
 
-            from scipy.interpolate import PchipInterpolator
-
             spline = PchipInterpolator(x,y)
             xval = np.linspace(min(x),max(x),1000)
             yval = spline(xval)
@@ -211,6 +214,14 @@ def plot_ndensity_PDFs(avgs,
     ax.axvline(x=2.0,color='k',linestyle='--')
 
     ############### Plotting end ################
+
+    #Axes limits
+    ax.set_xlim(-2,6)
+    ax.set_ylim(1e-3,1)
+    if "xlim" in kwargs:
+        ax.set_xlim(**kwargs["xlim"])
+    if "ylim" in kwargs:
+        ax.set_ylim(**kwargs["ylim"])
         
     #Text
     if "text" in kwargs:
@@ -224,7 +235,7 @@ def plot_ndensity_PDFs(avgs,
     if save is not None:
         fig.savefig(save, bbox_inches='tight', dpi=100)
 
-    return fig, ax, bars, lines
+    return fig
         
 ######################################################################
 #                    plot_sink_mass_evolutions                       #
@@ -233,6 +244,8 @@ def plot_ndensity_PDFs(avgs,
 def plot_sink_mass_evolutions(base_file_paths,
                               min_nums,
                               max_nums,
+                              time_unit=u.s,
+                              mass_unit=u.g,
                               colors=None,
                               linestyles=None,
                               linewidths=None,
@@ -247,55 +260,59 @@ def plot_sink_mass_evolutions(base_file_paths,
     Parameters
     ----------
 
-    base_file_paths : list of str
+    base_file_paths : `list` of `str`'s
         The list of base file path strings to read :class:`~fiesta.arepo.ArepoVoronoiGrid` 
         from. The format of the AREPO snapshots is usually ``<base_file_path><num>`` where 
-        num is an positive integer corresponding to the snapshot number.
+        ``<num>`` is an positive integer corresponding to the snapshot number.
 
-    min_nums: list
+    min_nums: `list`
         The list of starting value of ``<num>`` for each AREPO simulation.
 
-    max_nums : list
+    max_nums : `list`
         The list of ending value of ``<num>`` for each AREPO simulation.
 
-    colors: list, optional
+    time_unit :  `~astropy.units.Unit`, optional
+        The unit of time to use. Default value is ``u.s``.
+
+    mass_unit :  `~astropy.units.Unit`, optional
+        The unit of mass to use. Default value is ``u.g``.
+
+    colors: `list`, optional
         A list of *matplotlib*-compatible color strings corresponding
-        to each line plotted. If ``None`` (default), they are set in accordance with
-        *matplotlib* tab10 colour palette.
+        to each line plotted. If ``None`` (default), colors are picked
+        by cycling through *matplotlib* tab10 colour palette.
 
-    linestyles : list, optional
+    linestyles : `list`, optional
         A list of *matplotlib*-compatible linestyle strings corresponding
-        to each line plotted. If ``None`` (default), they are set to solid.
+        to each line plotted. If ``None`` (default), they are set to ``-``.
 
-    linewidths : list, optional
+    linewidths : `list`, optional
         A list of linewidths corresponding to each line plotted. 
-        If ``None`` (default), they are set to 1.5.
+        If ``None`` (default), they are set to ``1.5``.
 
-    labels : list, optional
+    labels : `list`, optional
         A list of labels corresponding to each line plotted.
         If ``None`` (default), they are numbered ``1, ..., n``.
 
-    save : str, optional
-        The name of the file to save the plot as. If ``None`` (default), plot is
-        not saved.
+    save : `str`, optional
+        File path to save the plot.
+        If ``None`` (default), plot is not saved.
 
-    **kwargs : dict, optional
+    **kwargs : `dict`, optional
         Additional *matplotlib*-based keyword arguments to control 
         finer details of the plot.
 
     Returns
     -------
 
-    fig : matplotlib.figure.Figure
-        Main *matplotlib.figure.Figure* instance.
-
-    ax : matplotlib.axes.Axes
-        Main *matplotlib.axes.Axes* instance.
-
-    lines : list
-        List of *matplotlib.lines.Line2D* instances.
+    fig : `~matplotlib.figure.Figure`
+        Main `~matplotlib.figure.Figure` instance.
 
     """
+
+    #Check unit
+    utils.check_unit(time_unit, u.s)
+    utils.check_unit(mass_unit, u.g)
 
     #Figure properties
     nsols = len(base_file_paths)
@@ -319,14 +336,6 @@ def plot_sink_mass_evolutions(base_file_paths,
     #Grid
     if "grid" in kwargs:
         ax.grid(**kwargs["grid"])
-    
-    #Axes limits
-    ax.set_xlim(-2,6)
-    ax.set_ylim(1e-3,1)
-    if "xlim" in kwargs:
-        ax.set_xlim(**kwargs["xlim"])
-    if "ylim" in kwargs:
-        ax.set_ylim(**kwargs["ylim"])
         
     #Axes scales
     ax.set_yscale('log')
@@ -348,8 +357,8 @@ def plot_sink_mass_evolutions(base_file_paths,
         ax.tick_params(**kwargs["tick_params"])
      
     #Axes labels
-    ax.set_xlabel(r"Time [Myrs]",fontsize=15)
-    ax.set_ylabel(r"Total sink mass  [M$_\odot$]",fontsize=15)
+    ax.set_xlabel(r"Time [{}] ".format(time_unit.to_string()),fontsize=15)
+    ax.set_ylabel(r"Total sink mass [{}] ".format(mass_unit.to_string()),fontsize=15)
     if "xlabel" in kwargs:
         ax.set_xlabel(**kwargs["xlabel"])
     if "ylabel" in kwargs:
@@ -371,28 +380,27 @@ def plot_sink_mass_evolutions(base_file_paths,
         time_arr = []
         totsinkmass_arr = []
 
-        print("FIESTA >> Started reading {}".format(bfp))
         for num in nums:
             file_path = bfp + num
             avg = arepo.ArepoVoronoiGrid(file_path)
-            time = avg.time*ufi.utime/(31536000.0*1.e6) #Myrs
-            print(counter,end=",")
-            counter+=1
+            time = avg.time.to_value(time_unit)
             time_arr.append(time)
-            totsinkmass = np.sum(avg.mass[avg.sink_ids]*ufi.usolarmass)
+            totsinkmass = np.sum(avg.mass[avg.sink_ids].to_value(mass_unit))
             totsinkmass_arr.append(totsinkmass)
-        print("FIESTA >> Finished reading {}".format(base_file_path))
 
         #ax.scatter(time_array,totsinkmass_array,color=color,s=3,zorder=1)
         line, = ax.plot(time_arr, totsinkmass_arr, color=c, linestyle=ls, linewidth=lw, label=la)
         lines.append(line)
-
-    #ax.axhline(y=250, color='grey', linewidth=1, linestyle='--', zorder=-1)
-    #ax.axhline(y=500, color='grey', linewidth=1, linestyle='--', zorder=-1)
-    #ax.axhline(y=750, color='grey', linewidth=1, linestyle='--', zorder=-1)
-    #ax.axhline(y=1000, color='grey', linewidth=1, linestyle='--', zorder=-1)
     
     ############### Plotting end ################ 
+
+    #Axes limits
+    ax.set_xlim(-2,6)
+    ax.set_ylim(1e-3,1)
+    if "xlim" in kwargs:
+        ax.set_xlim(**kwargs["xlim"])
+    if "ylim" in kwargs:
+        ax.set_ylim(**kwargs["ylim"])
     
     #Text
     if "text" in kwargs:
@@ -409,7 +417,7 @@ def plot_sink_mass_evolutions(base_file_paths,
     if save is not None:
         fig.savefig(save, bbox_inches='tight', dpi=100)
 
-    return fig, ax, lines
+    return fig
 
 ######################################################################
 #                        plot_log_histogram                          #
@@ -431,50 +439,43 @@ def plot_log_histogram(arrays,
     Parameters
     ----------
 
-    arrays : list of list of ints or floats
+    arrays : `list` of `list`'s
         The list of data arrays to generate histograms of.
 
-    bins: int or sequence or str
-        See *matplotlib.axes.Axes.hist* documentation for detail.
-        Default: ``auto``.
+    bins: `int` or `sequence` or `str`
+        See `~matplotlib.axes.Axes.hist` documentation for detail.
+        Default value is ``auto``.
 
-    colors: list, optional
+    colors: `list`, optional
         A list of *matplotlib*-compatible color strings corresponding
-        to each histogram plotted. If ``None`` (default), they are set in accordance 
-        with *matplotlib* tab10 colour palette.
+        to each line plotted. If ``None`` (default), colors are picked
+        by cycling through *matplotlib* tab10 colour palette.
 
-    linestyles : list, optional
+    linestyles : `list`, optional
         A list of *matplotlib*-compatible linestyle strings corresponding
-        to each histogram plotted. If ``None`` (default), they are set to solid.
+        to each line plotted. If ``None`` (default), they are set to ``-``.
 
-    linewidths : list, optional
-        A list of linewidths corresponding to each histogram plotted. 
-        If ``None`` (default), they are set to 1.5.
+    linewidths : `list`, optional
+        A list of linewidths corresponding to each line plotted. 
+        If ``None`` (default), they are set to ``1.5``.
 
-    labels : list, optional
+    labels : `list`, optional
         A list of labels corresponding to each histogram plotted.
         If ``None`` (default), they are numbered ``1, ..., n``.
 
-    save : str, optional
-        The name of the file to save the plot as. If ``None`` (default), plot is
-        not saved.
+    save : `str`, optional
+        File path to save the plot.
+        If ``None`` (default), plot is not saved.
 
-    **kwargs : dict, optional
+    **kwargs : `dict`, optional
         Additional *matplotlib*-based keyword arguments to control 
         finer details of the plot.
 
     Returns
     -------
 
-    fig : matplotlib.figure.Figure
-        Main *matplotlib.figure.Figure* instance.
-
-    ax : matplotlib.axes.Axes
-        Main *matplotlib.axes.Axes* instance.
-
-    hists : list
-        List of hist-related data. See *matplotlib.axes.Axes.hist* documentation
-        for more detail on return value.
+    fig : `~matplotlib.figure.Figure`
+        Main `~matplotlib.figure.Figure` instance.
 
     """
 
@@ -512,14 +513,6 @@ def plot_log_histogram(arrays,
     #Grid
     if "grid" in kwargs:
         ax.grid(**kwargs["grid"])
-    
-    #Axes limits
-    ax.set_xlim(1e-2,1e+2)
-    ax.set_ylim(1e-3,1)
-    if "xlim" in kwargs:
-        ax.set_xlim(**kwargs["xlim"])
-    if "ylim" in kwargs:
-        ax.set_ylim(**kwargs["ylim"])
         
     #Axes scales
     ax.set_xscale('log')
@@ -568,6 +561,14 @@ def plot_log_histogram(arrays,
 
     ############### Plotting end ################
 
+    #Axes limits
+    ax.set_xlim(1e-2,1e+2)
+    ax.set_ylim(1e-3,1)
+    if "xlim" in kwargs:
+        ax.set_xlim(**kwargs["xlim"])
+    if "ylim" in kwargs:
+        ax.set_ylim(**kwargs["ylim"])
+
     #Text
     if "text" in kwargs:
         ax.text(**kwargs["text"],transform=ax.transAxes)
@@ -580,7 +581,7 @@ def plot_log_histogram(arrays,
     if save is not None:
         fig.savefig(save, bbox_inches='tight', dpi=100)
 
-    return fig, ax, hists
+    return fig
 
 ######################################################################
 #                           plot_boxplot                             #
@@ -605,35 +606,35 @@ def plot_boxplot(arrays,
     Parameters
     ----------
 
-    arrays : list of list of ints or floats
+    arrays : `list` of `list`'s
         The list of data arrays to generate boxplot of.
 
     write_mean: bool
         If ``True`` (default), the mean value is mentioned below each mean line.
 
-    write_median: bool
+    write_median: `bool`
          If ``True`` (default), the median value is mentioned below each median line.
 
-    write_minmax : bool
+    write_minmax : `bool`
         If ``True`` (default), the minimum and maximum values are mentioned below
         the end whiskers.
 
-    write_total : bool
+    write_total : `bool`
         If ``True`` (default), the length of data arrays is mentioned at the right side
-        of the plot, outside the plot.
+        of the plot, outside the axes.
 
-    colors: list, optional
+    colors: `list`, optional
         A list of *matplotlib*-compatible color strings corresponding
-        to each box plotted. If ``None`` (default), they are set in accordance 
-        with *matplotlib* tab10 colour palette.
+        to each line plotted. If ``None`` (default), colors are picked
+        by cycling through *matplotlib* tab10 colour palette.
 
-    linestyles : list, optional
+    linestyles : `list`, optional
         A list of *matplotlib*-compatible linestyle strings corresponding
-        to each box plotted. If ``None`` (default), they are set to solid.
+        to each line plotted. If ``None`` (default), they are set to ``-``.
 
-    linewidths : list, optional
-        A list of linewidths corresponding to each box plotted.
-        If ``None`` (default), they are set to 1.5.
+    linewidths : `list`, optional
+        A list of linewidths corresponding to each line plotted. 
+        If ``None`` (default), they are set to ``1.5``.
 
     labels : list, optional
         A list of labels corresponding to each box plotted.
@@ -650,15 +651,8 @@ def plot_boxplot(arrays,
     Returns
     -------
 
-    fig : matplotlib.figure.Figure
-        Main *matplotlib.figure.Figure* instance.
-
-    ax : matplotlib.axes.Axes
-        Main *matplotlib.axes.Axes* instance.
-
-    boxplot : dict
-        See *matplotlib.axes.Axes.boxplot* documentation for detail on 
-        return value.
+    fig : `~matplotlib.figure.Figure`
+        Main `~matplotlib.figure.Figure` instance.
 
     """
 
@@ -684,13 +678,6 @@ def plot_boxplot(arrays,
     #Grid
     if "grid" in kwargs:
         ax.grid(**kwargs["grid"])
-    
-    #Axes limits
-    ax.set_ylim(0.2,len(arrays)+0.5)
-    if "xlim" in kwargs:
-        ax.set_xlim(**kwargs["xlim"])
-    if "ylim" in kwargs:
-        ax.set_ylim(**kwargs["ylim"])
         
     #Axes scales
     ax.set_xscale('log')
@@ -785,6 +772,13 @@ def plot_boxplot(arrays,
 
     ############### Plotting end ################
 
+    #Axes limits
+    ax.set_ylim(0.2,len(arrays)+0.5)
+    if "xlim" in kwargs:
+        ax.set_xlim(**kwargs["xlim"])
+    if "ylim" in kwargs:
+        ax.set_ylim(**kwargs["ylim"])
+
     #Text
     if "text" in kwargs:
         ax.text(**kwargs["text"],transform=ax.transAxes)
@@ -792,4 +786,4 @@ def plot_boxplot(arrays,
     if save is not None:
         fig.savefig(save, bbox_inches='tight', dpi=100)
 
-    return fig, ax, boxplot
+    return fig
