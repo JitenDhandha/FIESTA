@@ -493,7 +493,7 @@ class Filament:
         if plot_correction:
             fig = plt.figure(figsize=(8,8))
             ax = fig.add_subplot(111,projection='3d')
-            utils.check_quantity(length_unit, u.cm, "length_unit")
+            utils.check_unit(length_unit, u.cm)
             ax.set_xlabel(r"$x$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
             ax.set_ylabel(r"$y$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
             ax.set_zlabel(r"$z$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
@@ -589,6 +589,7 @@ class Filament:
         if plot_filament:
             fig = plt.figure(figsize=(8,8))
             ax = fig.add_subplot(111,projection='3d')
+            utils.check_unit(length_unit, u.cm)
             ax.set_xlabel(r"$x$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
             ax.set_ylabel(r"$y$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
             ax.set_zlabel(r"$z$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
@@ -840,7 +841,7 @@ class Network:
 
     Attributes
     ----------
-    
+
     cps : `list` of `~fiesta.disperse.CriticalPoint`'s
         Array of `~fiesta.disperse.CriticalPoint`'s in the network.
 

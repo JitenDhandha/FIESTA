@@ -207,7 +207,7 @@ def calc_number_density(rho, unit=u.cm**-3):
         Number density :math:`n`.
 
     """
-    utils.check_quantity(rho, u.g/u.cm*3, "rho")
+    utils.check_quantity(rho, u.g/u.cm**3, "rho")
     rho = rho.to(u.g/u.cm**3)
     ndensity = rho/((1.0 + 4.0 * ufi.AREPO_xHe) * const.m_p.cgs)
     utils.check_unit(unit, u.cm**-3)

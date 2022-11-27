@@ -175,6 +175,9 @@ class ArepoVoronoiGrid:
         self.cloud_ids = None
         self.non_cloud_ids = None
 
+        #Additional internal variables
+        self._tree = None
+
     ######################################################################
     #                             GETTERS                                #
     ######################################################################

@@ -32,7 +32,7 @@ def check_unit(unit, expected_unit):
 
 def check_quantity(obj, expected_unit, string="Object"):
     if not isinstance(obj, u.Quantity):
-        raise TypeError(_prestring() + string + "must be a Quantity!")
+        raise TypeError(_prestring() + string + " must be a Quantity!")
     if not obj.unit.is_equivalent(expected_unit):
         raise u.UnitsError(_prestring() + string + " has incompatible/unexpected units.")
 
