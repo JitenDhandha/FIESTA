@@ -52,7 +52,7 @@ AREPO_TIME = u.def_unit('AREPO_TIME', AREPO_LENGTH/AREPO_VELOCITY)    #: Derived
 AREPO_DENSITY = u.def_unit('AREPO_DENSITY', AREPO_MASS/AREPO_LENGTH/AREPO_LENGTH/AREPO_LENGTH) #: Derived AREPO `~astropy.units.Unit` for *density*.
 AREPO_ENERGY = u.def_unit('AREPO_ENERGY', AREPO_MASS*AREPO_VELOCITY*AREPO_VELOCITY)  #: Derived AREPO `~astropy.units.Unit` for *energy*.    
 
-AREPO_xHe = 0.1 * u.dimensionless_unscaled #: Helium fractional abundance assumed in AREPO.
+AREPO_xHe = 0.1 << u.dimensionless_unscaled #: Helium fractional abundance assumed in AREPO.
 
 #For the units, use .represents attribute of `~astropy.units.Unit` class to see its
 #current value. For example, "AREPO_LENGTH.represents"
@@ -82,7 +82,7 @@ def set_AREPO_LENGTH(length):
     """
     global AREPO_LENGTH
     utils.check_quantity(length,u.cm)
-    AREPO_LENGTH = length
+    AREPO_LENGTH = u.def_unit('AREPO_LENGTH', length)
     _reset_derived_units()
 
 def set_AREPO_MASS(mass):
@@ -98,7 +98,7 @@ def set_AREPO_MASS(mass):
     """
     global AREPO_MASS
     utils.check_quantity(mass,u.g)
-    AREPO_MASS = mass
+    AREPO_MASS = u.def_unit('AREPO_MASS', mass)
     _reset_derived_units()
 
 def set_AREPO_VELOCITY(vel):
@@ -114,7 +114,7 @@ def set_AREPO_VELOCITY(vel):
     """
     global AREPO_VELOCITY
     utils.check_quantity(vel,u.cm/u.s)
-    AREPO_VELOCITY = vel
+    AREPO_VELOCITY = u.def_unit('AREPO_VELOCITY', vel)
     _reset_derived_units()
 
 def set_AREPO_xHe(xHe):
@@ -131,7 +131,7 @@ def set_AREPO_xHe(xHe):
     """
     global AREPO_xHe
     utils.check_quantity(xHe,u.dimensionless_unscaled)
-    AREPO_xHe = xHe
+    AREPO_xHe = xHe << u.dimensionless_unscaled
 
 ######################################################################
 #                       [FUTURE FUNCTIONALITY]                       #

@@ -60,7 +60,7 @@ def calc_jeans_mass(cs, ndens, unit=u.g):
     cs = cs.to(u.km/u.s)
     ndens = ndens.to(u.cm**-3)
     jeans_mass = 2.0 * np.power(cs/(0.2 * u.km/u.s),3) * np.power(ndens/(1000.0 * u.cm**-3),-0.5) << u.Msun
-    utils.check_quantity(unit, u.g)
+    utils.check_unit(unit, u.g)
     return jeans_mass.to(unit)
 
 def calc_free_fall_time(ndens, unit=u.s):
@@ -267,7 +267,7 @@ def calc_chem_density(chem, ndens, unit=u.cm**-3):
     nCO = xCO*ndens
     nHI = xHI*ndens
     nTOT =xTOT*ndens
-    utils.check_quantity(unit, u.cm**-3)
+    utils.check_unit(unit, u.cm**-3)
     return nHI.to(unit), nHp.to(unit), nH2.to(unit), nCO.to(unit), nTOT.to(unit)
 
 def calc_temperature(rho, utherm, nTOT, unit=u.K):

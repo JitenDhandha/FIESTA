@@ -338,7 +338,6 @@ def plot_sink_mass_evolutions(base_file_paths,
         ax.grid(**kwargs["grid"])
         
     #Axes scales
-    ax.set_yscale('log')
     if "xscale" in kwargs:
         ax.set_xscale(**kwargs["xscale"])
     if "yscale" in kwargs:
@@ -395,8 +394,6 @@ def plot_sink_mass_evolutions(base_file_paths,
     ############### Plotting end ################ 
 
     #Axes limits
-    ax.set_xlim(-2,6)
-    ax.set_ylim(1e-3,1)
     if "xlim" in kwargs:
         ax.set_xlim(**kwargs["xlim"])
     if "ylim" in kwargs:
