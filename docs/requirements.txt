@@ -6,6 +6,10 @@
 #
 alabaster==0.7.12
     # via sphinx
+astropy-sphinx-theme==1.1
+    # via sphinx-astropy
+attrs==22.1.0
+    # via pytest
 babel==2.10.3
     # via sphinx
 beautifulsoup4==4.11.1
@@ -18,18 +22,33 @@ docutils==0.16
     # via
     #   pydata-sphinx-theme
     #   sphinx
+exceptiongroup==1.0.4
+    # via pytest
 idna==3.4
     # via requests
 imagesize==1.4.1
     # via sphinx
+iniconfig==1.1.1
+    # via pytest
 jinja2==3.1.2
-    # via sphinx
+    # via
+    #   numpydoc
+    #   sphinx
 markupsafe==2.1.1
     # via jinja2
+numpydoc==1.5.0
+    # via sphinx-astropy
 packaging==21.3
     # via
     #   pydata-sphinx-theme
+    #   pytest
+    #   pytest-doctestplus
     #   sphinx
+    #   sphinx-astropy
+pillow==9.3.0
+    # via sphinx-astropy
+pluggy==1.0.0
+    # via pytest
 pydata-sphinx-theme==0.12.0
     # via -r requirements.in
 pygments==2.13.0
@@ -38,6 +57,10 @@ pygments==2.13.0
     #   sphinx
 pyparsing==3.0.9
     # via packaging
+pytest==7.2.0
+    # via pytest-doctestplus
+pytest-doctestplus==0.12.1
+    # via sphinx-astropy
 pytz==2022.4
     # via babel
 requests==2.28.1
@@ -49,7 +72,17 @@ soupsieve==2.3.2.post1
 sphinx==4.2.0
     # via
     #   -r requirements.in
+    #   numpydoc
     #   pydata-sphinx-theme
+    #   sphinx-astropy
+    #   sphinx-automodapi
+    #   sphinx-gallery
+sphinx-astropy==1.7.0
+    # via -r requirements.in
+sphinx-automodapi==0.14.1
+    # via sphinx-astropy
+sphinx-gallery==0.11.1
+    # via sphinx-astropy
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
@@ -62,6 +95,8 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
+tomli==2.0.1
+    # via pytest
 urllib3==1.26.12
     # via requests
 
