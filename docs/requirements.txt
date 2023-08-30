@@ -8,6 +8,8 @@ accessible-pygments==0.0.4
     # via pydata-sphinx-theme
 alabaster==0.7.12
     # via sphinx
+astropy==5.3.2
+    # via -r requirements.in
 babel==2.10.3
     # via
     #   pydata-sphinx-theme
@@ -18,52 +20,88 @@ certifi==2022.9.24
     # via requests
 charset-normalizer==2.1.1
     # via requests
+contourpy==1.1.0
+    # via matplotlib
+cycler==0.11.0
+    # via matplotlib
 docutils==0.19
     # via
     #   myst-parser
     #   pydata-sphinx-theme
     #   sphinx
+fonttools==4.42.1
+    # via matplotlib
 idna==3.4
     # via requests
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==6.8.0
     # via sphinx
+importlib-resources==6.0.1
+    # via matplotlib
 jinja2==3.1.2
     # via
     #   myst-parser
     #   sphinx
+kiwisolver==1.4.5
+    # via matplotlib
 markdown-it-py==3.0.0
     # via
     #   mdit-py-plugins
     #   myst-parser
 markupsafe==2.1.1
     # via jinja2
+matplotlib==3.7.2
+    # via -r requirements.in
 mdit-py-plugins==0.4.0
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
 myst-parser==2.0.0
     # via -r requirements.in
+numpy==1.25.2
+    # via
+    #   -r requirements.in
+    #   astropy
+    #   contourpy
+    #   matplotlib
+    #   pyerfa
+    #   scipy
 packaging==21.3
     # via
+    #   astropy
+    #   matplotlib
     #   pydata-sphinx-theme
     #   sphinx
+pillow==10.0.0
+    # via matplotlib
 pydata-sphinx-theme==0.13.3
     # via sphinx-book-theme
+pyerfa==2.0.0.3
+    # via astropy
 pygments==2.16.1
     # via
     #   accessible-pygments
     #   pydata-sphinx-theme
     #   sphinx
 pyparsing==3.0.9
-    # via packaging
+    # via
+    #   matplotlib
+    #   packaging
+python-dateutil==2.8.2
+    # via matplotlib
 pytz==2022.4
     # via babel
 pyyaml==6.0.1
-    # via myst-parser
+    # via
+    #   astropy
+    #   myst-parser
 requests==2.28.1
     # via sphinx
+scipy==1.11.2
+    # via -r requirements.in
+six==1.16.0
+    # via python-dateutil
 snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.3.2.post1
@@ -94,4 +132,6 @@ typing-extensions==4.7.1
 urllib3==1.26.12
     # via requests
 zipp==3.16.2
-    # via importlib-metadata
+    # via
+    #   importlib-metadata
+    #   importlib-resources

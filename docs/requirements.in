@@ -1,3 +1,7 @@
 sphinx==6.2.1
 myst-parser==2.0.0
 sphinx-book-theme==1.0.1
+scipy==1.11.2
+numpy==1.25.2
+matplotlib==3.7.2
+astropy==5.3.2
