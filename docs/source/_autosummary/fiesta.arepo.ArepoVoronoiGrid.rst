@@ -10,7 +10,6 @@ fiesta.arepo.ArepoVoronoiGrid
    .. autosummary::
       :toctree:
    
-      ArepoVoronoiGrid.detect_cloud
       ArepoVoronoiGrid.get_chem
       ArepoVoronoiGrid.get_gas_ids
       ArepoVoronoiGrid.get_mass
@@ -26,9 +25,7 @@ fiesta.arepo.ArepoVoronoiGrid
       ArepoVoronoiGrid.get_time
       ArepoVoronoiGrid.get_utherm
       ArepoVoronoiGrid.get_vel
-      ArepoVoronoiGrid.plot_inital_velocity
       ArepoVoronoiGrid.plot_projection
-      ArepoVoronoiGrid.update_cloud_velocity
       ArepoVoronoiGrid.write_file
 
 

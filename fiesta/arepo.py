@@ -95,22 +95,6 @@ class ArepoVoronoiGrid:
     utherm : `~astropy.units.Quantity`
         1D array of thermal energy per unit mass of all particles.
 
-    cloud_size : `~astropy.units.Quantity`
-        Size of one axis of the bounding box, surrounding the molecular cloud.
-        Only relevant when `~fiesta.arepo.ArepoVoronoiGrid.detect_cloud` is called.
-
-    cloud_Tmax : `~astropy.units.Quantity`
-        Maximum temperature of the molecular cloud (usually ~20-30K).
-        Only relevant when `~fiesta.arepo.ArepoVoronoiGrid.detect_cloud` is called.
-
-    cloud_ids : `~numpy.ndarray`
-        1D array of indices corresponding to cloud particles.
-        Only relevant when `~fiesta.arepo.ArepoVoronoiGrid.detect_cloud` is called.
-
-    non_cloud_ids : `~numpy.ndarray`
-        1D array of indices corresponding to non-cloud particles.
-        Only relevant when `~fiesta.arepo.ArepoVoronoiGrid.detect_cloud` is called.
-
     Parameters
     ----------
 
@@ -168,12 +152,6 @@ class ArepoVoronoiGrid:
                   
         if(verbose):
             print(utils._prestring() + "Completed loading AREPO Voronoi grid from \"{}\"".format(file_path))
-
-        #Setting variables for the cloud (optional)
-        self.cloud_size = None
-        self.cloud_Tmax = None
-        self.cloud_ids = None
-        self.non_cloud_ids = None
 
         #Additional internal variables
         self._tree = None
@@ -426,6 +404,7 @@ class ArepoVoronoiGrid:
                         bins=1000,
                         bounds=None,
                         filaments=None,
+                        sinks=None,
                         cmap='magma',
                         save=None,
                         **kwargs):
@@ -449,7 +428,7 @@ class ArepoVoronoiGrid:
 
         bins : `int`, optional
             Number of bins of the 2D histogram. 
-            See ~matplotlib.axes.Axes.hist2d documentation for more detail. 
+            See `~matplotlib.axes.Axes.hist2d` documentation for more detail. 
             Default value is ``1000``.
 
         bounds : `~astropy.units.Quantity`, optional
@@ -459,6 +438,9 @@ class ArepoVoronoiGrid:
 
         filaments: `list` of `~fiesta.disperse.Filament`'s, optional
             1D array of `~fiesta.disperse.Filament` objects to plot with the projection.
+            
+        sinks : `list` of `list`'s, optional
+            List of sink positions to plot.
 
         cmap : `str` or `~matplotlib.colors.Colormap`, optional
             Colormap of the histogram. Default value is ``'magma'``.
@@ -569,6 +551,13 @@ class ArepoVoronoiGrid:
                     ax.scatter(x[0], y[0], c='red', s=2, zorder=2)
                     ax.scatter(x[-1], y[-1], c='red', s=2, zorder=2)
                     ax.plot(x, y, linewidth=1, c='gold')
+                    
+        #Sink plot
+        if sinks is not None:
+                #Shedding units for ease of use
+                x = sinks[:,xaxis].to_value(length_unit)
+                y = sinks[:,yaxis].to_value(length_unit)
+                ax.scatter(x, y, s=2, c='red', zorder=2)
 
         ############### Plotting end ################
 
@@ -586,274 +575,6 @@ class ArepoVoronoiGrid:
             fig.savefig(save, bbox_inches='tight', dpi=100)
 
         return fig
-
-    def plot_inital_velocity(self,
-                             projection='z',
-                             length_unit=u.cm,
-                             velocity_unit=u.cm/u.s,
-                             cmap='RdBu',
-                             save=None,
-                             **kwargs):
-
-        """
-        
-        Plot a 3D heatmap of the velocities of a molecular cloud.
-        Requires `~fiesta.arepo.ArepoVoronoiGrid.` to be run before.
-
-        Parameters
-        ----------
-        
-        projection : `str`, optional
-            Velocity component to plot: ``x``, ``y`` or ``z`` (default).
-
-        length_unit :  `~astropy.units.Unit`, optional
-            The unit of length of x and y axis. Default value is ``u.cm``.
-
-        velocity_unit :  `~astropy.units.Unit`, optional
-            The unit of velocity. Default value is ``u.cm/u.s``.
-
-        cmap : `str` or `~matplotlib.colors.Colormap`, optional
-            Colormap of the plot. Default is ``'RdBu'``.
-
-        save : `str`, optional
-            File path to save the plot.
-            If ``None`` (default), plot is not saved.
-
-        **kwargs : `dict`, optional
-            Additional *matplotlib*-based keyword arguments to control 
-            finer details of the plot.
-
-        Returns
-        -------
-
-        fig : `~matplotlib.figure.Figure`
-            Main `~matplotlib.figure.Figure` instance.
-
-        """
-
-        #Shedding units for ease of use
-        utils.check_unit(length_unit, u.cm)
-        utils.check_unit(velocity_unit, u.cm/u.s)
-        x, y, z = self.pos[self.cloud_ids].T.to_value(length_unit)
-        vel = self.vel[self.cloud_ids].to_value(velocity_unit)
-
-        #Main figure
-        fig = plt.figure(figsize=(8,8))
-        if "figure" in kwargs:
-            plt.setp(fig,**kwargs["figure"])
-            
-        ax = fig.add_subplot(111,projection='3d')
-        
-        #Axes ticks
-        ax.xaxis.set_tick_params(which='major', width=1, length=5, labelsize=15)
-        ax.xaxis.set_tick_params(which='minor', width=1, length=2.5, labelsize=10)
-        ax.yaxis.set_tick_params(which='major', width=1, length=5, labelsize=15)
-        ax.yaxis.set_tick_params(which='minor', width=1, length=2.5, labelsize=10)
-        ax.zaxis.set_tick_params(which='major', width=1, length=5, labelsize=15)
-        ax.zaxis.set_tick_params(which='minor', width=1, length=2.5, labelsize=10)
-        if "xtick_params" in kwargs:
-            ax.xaxis.set_tick_params(**kwargs["xtick_params"])
-        if "ytick_params" in kwargs:
-            ax.yaxis.set_tick_params(**kwargs["ytick_params"])
-        if "ztick_params" in kwargs:
-            ax.zaxis.set_tick_params(**kwargs["ytick_params"])
-
-        #Axes labels
-        ax.set_xlabel(r"$x$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
-        ax.set_ylabel(r"$y$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
-        ax.set_zlabel(r"$z$ [{}] ".format(length_unit.to_string()),fontsize=15,labelpad=5)
-
-        if "xlabel" in kwargs:
-            ax.set_xlabel(**kwargs["xlabel"])
-        if "ylabel" in kwargs:
-            ax.set_ylabel(**kwargs["ylabel"])
-        if "zlabel" in kwargs:
-            ax.set_zlabel(**kwargs["zlabel"])
-            
-        #Figure title
-        ax.set_title("",fontsize=15)
-        if "title" in kwargs:
-            ax.set_title(**kwargs["title"])
-
-        ############### Plotting start ################
-
-        #Colors!
-        cmap = copy.copy(mpl.cm.get_cmap(cmap))
-
-        #Projection
-        if(projection=='x' or projection=='X'):
-            n = 0
-        elif(projection=='y' or projection=='Y'):
-            n = 1
-        elif(projection=='z' or projection=='Z'):
-            n = 2
-        else:
-            raise ValueError(utils._prestring() + "Invalid projection.")
-        vel = vel[:,n]
-
-        scatter = ax.scatter(x, y, z, c=vel, s=0.5, cmap=cmap)
-
-        cbar = fig.colorbar(scatter, ax=ax, fraction=0.038, pad=0.1)
-        cbar.set_label(r'Velocity projection ${}$ [{}]'.format(projection,velocity_unit.to_string()), size=15, color='black')
-        cbar.ax.tick_params(labelsize=15, color='black')
-        cbar.outline.set_edgecolor('black')
-        plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='black')
-
-        ############### Plotting end ################
-
-        #Axes limits
-        if "xlim" in kwargs:
-            ax.set_xlim(**kwargs["xlim"])
-        if "ylim" in kwargs:
-            ax.set_ylim(**kwargs["ylim"])
-        if "zlim" in kwargs:
-            ax.set_zlim(**kwargs["zlim"])
-
-        if save is not None:
-            fig.savefig(save, bbox_inches='tight', dpi=100)
-
-        return fig
-
-    ######################################################################
-    #                        CLOUD-BASED FUNCTIONS                       #
-    ######################################################################
-
-    def detect_cloud(self, cloud_size, cloud_Tmax, verbose=False):
-
-        """
-        
-        Detects the presence of a molecular cloud centered in the simulation box,
-        bounded within a cubical region, and with a maximum temperature. The code
-        is currently based on the assumption that the cloud is spherical and centered
-        in the simulation box, which is usually the case when setting initial conditions. 
-        This function sets various instance variables to access the cloud, as follows: 
-        `~fiesta.arepo.ArepoVoronoiGrid.cloud_size`, `~fiesta.arepo.ArepoVoronoiGrid.cloud_Tmax`
-        `~fiesta.arepo.ArepoVoronoiGrid.cloud_ids`, `~fiesta.arepo.ArepoVoronoiGrid.non_cloud_ids`.
-
-        Parameters
-        ----------
-        
-        cloud_size : `~astropy.units.Quantity`
-            Size of the cubical region within which the cloud is bounded,
-            (assuming it is centered in the simulation box).
-            This is especially useful when the simulation box is much bigger 
-            than the initial cloud.
-
-        cloud_Tmax : `~astropy.units.Quantity`
-            Maximum temperature of the cloud in Kelvin (usually ~20-30K). This 
-            ensures that non-cloud particles within the ``cloud_size`` box
-            are not erroneously detected as part of the cloud. 
-
-        verbose : `bool`, optional
-            If ``True``, prints output during cloud detection. Default value is
-            ``False``.
-
-        """
-
-        if(verbose):
-            print(utils._prestring() + "Detecting cloud...")
-        
-        #DEFINING BOUNDARIES OF THE CLOUD (a cubical region containing it)
-        utils.check_quantity(cloud_size, u.cm, "cloud_size")
-        self.cloud_size = cloud_size
-        cloud_min = self.size/2 - self.cloud_size/2
-        cloud_max = self.size/2 + self.cloud_size/2
-        
-        #SETTING MAXIMUM TEMPERATURE FOR THE CLOUD
-        utils.check_quantity(cloud_Tmax, u.K, "cloud_Tmax")
-        self.cloud_Tmax = cloud_Tmax
-    
-        #EXTRACTING THE CLOUD FROM THE GAS
-        #First filter: Narrowing search to a region
-        #Second filter: Selecting low temperature cells
-        CLOUD_MASK = ((self.pos[:,0] > cloud_min) &
-                      (self.pos[:,0] < cloud_max) &
-                      (self.pos[:,1] > cloud_min) &
-                      (self.pos[:,1] < cloud_max) &
-                      (self.pos[:,2] > cloud_min) &
-                      (self.pos[:,2] < cloud_max) &
-                      (self.get_temperature() < cloud_Tmax))
-        self.cloud_ids = np.where(CLOUD_MASK)[0]
-        self.non_cloud_ids = np.delete(np.arange(self.ntot), self.cloud_ids)
-        if(verbose):
-            print(utils._prestring() + "Note: The number of cloud particles is {}".format(len(self.cloud_ids)))
-            print(utils._prestring() + "Completed detecting cloud.")
-
-    def update_cloud_velocity(self, tvg, virial_ratio=1.0, verbose=False):
-
-        """
-        
-        Set velocity of the molecular cloud particles in accordance with a
-        `~fiesta.turbvel.TurbulentVelocityGrid`. 
-        Requires `~fiesta.arepo.ArepoVoronoiGrid.detect_cloud` to be run before. The cubic grid is first 
-        scaled to `~fiesta.arepo.ArepoVoronoiGrid.cloud_size` and then linearly interpolated to fill in 
-        the Voronoi grid of cloud particles.
-
-        Parameters
-        ----------
-        
-        tvg : `~fiesta.turbvel.TurbulentVelocityGrid`
-            The turbulent velocity grid to use for assigning velocities to the cloud.
-
-        virial_ratio : `float`, optional
-            The virial ratio :math:`\\alpha_\\mathrm{vir} = \\frac{E_\\mathrm{kin}}{E_\\mathrm{grav}}`
-            for scaling the velocities, since the turbulent velocity grid is normalized and unitless.
-            A ratio of ``1.0`` (default) means equilibrium condition.
-
-        verbose : `bool`, optional
-            If ``True``, prints output during when setting cloud velocities. Default
-            value is ``False``.
-
-        """
-
-        #CREATING INTERPOLATION FUNCTION
-        if(verbose):
-            print(utils._prestring() + "Started creating linear interpolation function for velocities...")
-        #Creating grid for interpolating
-        cloud_min = self.size/2 - self.cloud_size/2
-        cloud_max = self.size/2 + self.cloud_size/2
-        range_vals = np.linspace(cloud_min.to_value(u.cm),
-                                 cloud_max.to_value(u.cm),
-                                 num=tvg._size.value,
-                                 endpoint=True)
-        #Interpolating the data
-        interp_x = interp.RegularGridInterpolator([range_vals]*3,tvg.vx,method='linear')
-        interp_y = interp.RegularGridInterpolator([range_vals]*3,tvg.vy,method='linear')
-        interp_z = interp.RegularGridInterpolator([range_vals]*3,tvg.vz,method='linear')
-        if(verbose):
-            print(utils._prestring() + "Completed creating linear interpolation function for velocities.")
-
-        #CREATING VELOCITY ARRAY
-        if(verbose):
-            print(utils._prestring() + "Started interpolating velocities for the AREPO grid...")
-        #Filling with all zero velocity first (note, we start here with AREPO_VELOCITY units)
-        vel_new = np.zeros((self.ntot,3)) << ufi.AREPO_VELOCITY
-        vx = interp_x(self.pos[self.cloud_ids].to_value(u.cm))
-        vy = interp_y(self.pos[self.cloud_ids].to_value(u.cm))
-        vz = interp_z(self.pos[self.cloud_ids].to_value(u.cm))
-        vel_new[self.cloud_ids] = np.array([vx,vy,vz]).T << ufi.AREPO_VELOCITY
-        if(verbose):
-            print(utils._prestring() + "Completed interpolating velocities for the AREPO grid.")
-        #Note that the velocity array is in arbitrary units so will have to be scaled    
-
-        #SCALING VELOCITIES TO A SPECIFIC VIRIAL RATIO
-        if(verbose):
-            print(utils._prestring() + "Started scaling velocities to satisfy virial ratio {}...".format(virial_ratio))
-        #Finding the scaling factor first
-        E_k = prop.calc_total_kinetic_energy(self.mass[self.cloud_ids], vel_new[self.cloud_ids])
-        E_g = prop.calc_total_gravitational_potential_energy(self.mass[self.cloud_ids], self.rho[self.cloud_ids])
-        current_ratio = 2.0 * E_k / E_g
-        scaling = np.sqrt(virial_ratio/current_ratio)
-        if(verbose):
-            print(utils._prestring() + "Note: the scaling factor is {}.".format(scaling))
-        #Scaling the velocity here
-        vel_new = vel_new * scaling
-        if(verbose):
-            print(utils._prestring() + "Completed scaling velocities to satisfy virial ratio {}.".format(virial_ratio))
-
-        #CHUCKING VELOCITIES INTO VARIABLES
-        self.vel = vel_new
-
                   
 ######################################################################
 #                        CLASS: ArepoCubicGrid                       #
@@ -953,7 +674,7 @@ class ArepoCubicGrid:
         #Read 3D data
         self.density = _areporeadwrite.read_grid(file_path) << ufi.AREPO_DENSITY
         #Save dimensions
-        self.nx, self.ny, self.nz = u.Quantity(self.density.shape, copy=False, dtype=int, unit=u.pix)
+        self.nx, self.ny, self.nz = u.Quantity(self.density.shape, copy=False, dtype=int)
 
         #Setting default scale
         self.scale = "pixel"
@@ -1070,7 +791,7 @@ class ArepoCubicGrid:
             to the grid, in the format ``[xmin, xmax, ymin, ymax,
             zmin, zmax]``. If ``None`` (default), then
             ``scale='pixel'``, else ``scale='physical'``. If not an
-            `~astrop.units.Quantity`, assumed to be in `~fiesta.units.AREPO_LENGTH`
+            `~astropy.units.Quantity`, assumed to be in `~fiesta.units.AREPO_LENGTH`
             units.
 
         verbose : bool, optional
@@ -1082,9 +803,9 @@ class ArepoCubicGrid:
         self.scale = "physical"
         bounds = u.Quantity(AREPO_bounds, unit=ufi.AREPO_LENGTH)
         self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax = bounds
-        self.xlength = (self.xmax - self.xmin)/(self.nx.value)
-        self.ylength = (self.ymax - self.ymin)/(self.ny.value)
-        self.zlength = (self.zmax - self.zmin)/(self.nz.value)
+        self.xlength = (self.xmax - self.xmin)/(self.nx)
+        self.ylength = (self.ymax - self.ymin)/(self.ny)
+        self.zlength = (self.zmax - self.zmin)/(self.nz)
 
     def get_ndensity(self, unit=u.cm**-3):
         """
@@ -1600,7 +1321,6 @@ class ArepoCubicGrid:
         """
 
         #Shedding units for ease of use
-        utils.check_unit(ndensity_unit, u.cm**-3)
         if(self.scale=="physical"):
             internal_unit = u.cm
         elif(self.scale=="pixel"):
@@ -1608,6 +1328,18 @@ class ArepoCubicGrid:
         if length_unit is None:
             length_unit = internal_unit
         utils.check_unit(length_unit, internal_unit)
+        if(self.scale=="physical"):
+            ndensity_length_unit = ndensity_unit**(-1/3)
+            xlength = self.xlength.to_value(ndensity_length_unit)
+            ylength = self.ylength.to_value(ndensity_length_unit)
+            zlength = self.zlength.to_value(ndensity_length_unit)
+        elif(self.scale=="pixel"):
+            ndensity_length_unit = u.pix
+            xlength = self.xlength.value
+            ylength = self.ylength.value
+            zlength = self.zlength.value
+        utils.check_unit(ndensity_unit, u.cm**-3)
+        
         data = self.get_ndensity().to_value(ndensity_unit)
         xmin = self.xmin.to_value(length_unit)
         xmax = self.xmax.to_value(length_unit)
@@ -1681,15 +1413,15 @@ class ArepoCubicGrid:
 
         if(projection=='x' or projection=='X'):
             (xaxis, yaxis) = (1,2)
-            plot_data = np.sum(data,axis=0).T
+            plot_data = np.sum(data,axis=0).T * xlength
             extent=[ymin,ymax,zmin,zmax]
         elif(projection=='y' or projection=='Y'):
             (xaxis, yaxis) = (0,2)
-            plot_data = np.sum(data,axis=1).T
+            plot_data = np.sum(data,axis=1).T * ylength
             extent=[xmin,xmax,zmin,zmax]
         elif(projection=='z' or projection=='Z'):
             (xaxis, yaxis) = (0,1)
-            plot_data = np.sum(data,axis=2).T
+            plot_data = np.sum(data,axis=2).T * zlength
             extent=[xmin,xmax,ymin,ymax]
             
         #Checking if empty
@@ -1726,7 +1458,7 @@ class ArepoCubicGrid:
 
         #Colorbar
         cbar = fig.colorbar(cb, ax=ax,fraction=0.046, pad=0.02)
-        cbar.set_label(r'Column density [{}]'.format((ndensity_unit**(2/3)).to_string()),fontsize=15)
+        cbar.set_label(r'Column density [{}]'.format((ndensity_length_unit*ndensity_unit).to_string()),fontsize=15)
         cbar.ax.tick_params(labelsize=15, color='black')
         cbar.ax.yaxis.get_offset_text().set_fontsize(15)
 

@@ -8,12 +8,6 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 from fiesta import __version__
 
-try:
-    from sphinx_astropy.conf import *
-except ImportError:
-    print('ERROR: the documentation requires the sphinx-astropy package to be installed')
-    sys.exit(1)
-
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -31,7 +25,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
               'sphinx.ext.viewcode',
               'sphinx.ext.mathjax',
-              'sphinx.ext.intersphinx']
+              'sphinx.ext.intersphinx',
+              'myst_parser']
 
 #Autosummary
 autosummary_generate = True
@@ -48,25 +43,24 @@ intersphinx_mapping = {'python': ('http://docs.python.org/3', None),
 
 templates_path = ['_templates']
 exclude_patterns = []
+#This sets the role of `text` markup in docstrings
+default_role = 'obj'
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "pydata_sphinx_theme"
-
+html_theme = "sphinx_book_theme"
+html_logo = "_static/logo.svg"
+html_favicon = "_static/logo.svg"
 html_theme_options = {
-  "github_url": "https://github.com/JitenDhandha/fiesta",
-  "primary_sidebar_end": ["indices.html"],
-  "secondary_sidebar_items": ["sourcelink"],
-  "show_prev_next": False,
-  "show_nav_level": 2,
+    "show_navbar_depth": 2,
+    "repository_url": "https://github.com/JitenDhandha/fiesta",
+    "repository_branch": "master",
+    "path_to_docs": "docs",
+    "use_repository_button": True,
+    "use_edit_page_button": True,
+    "use_issues_button": True,
+    "secondary_sidebar_items": []
 }
-html_sidebars = {
-    "**": ["search-field.html", "localtoc.html", "sidebar-nav-bs.html"]
-}
-html_domain_indices = False
-html_title = "%s v%s" % (project, version)
-html_context = {"default_mode": "dark"}
-
 html_static_path = ['_static']
 html_css_files = ['custom.css']
