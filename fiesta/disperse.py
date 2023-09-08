@@ -578,7 +578,7 @@ class Filament:
             points = self.get_points(np.linspace(0,1,npoints,endpoint=True))
         points_val = points.to_value(u.cm)
         utils.check_quantity(cylinder_radius, u.cm, "cylinder_radius")
-        self.radius = cylinder_radius
+        self.radius = cylinder_radius.to(u.cm)
         cylinder_radius = cylinder_radius.to_value(u.cm)
 
         #Initialize arrays
