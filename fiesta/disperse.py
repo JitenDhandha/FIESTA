@@ -578,8 +578,8 @@ class Filament:
             points = self.get_points(np.linspace(0,1,npoints,endpoint=True))
         points_val = points.to_value(u.cm)
         utils.check_quantity(cylinder_radius, u.cm, "cylinder_radius")
-        cylinder_radius = cylinder_radius.to_value(u.cm)
         self.radius = cylinder_radius
+        cylinder_radius = cylinder_radius.to_value(u.cm)
 
         #Initialize arrays
         vectors, rotation_matrices, all_cylinder_ids, all_cylinder_points = _get_cylinders(points_val, AREPO_pos, cylinder_radius)
