@@ -1247,6 +1247,9 @@ class Network:
         if length_unit is None:
             length_unit = internal_unit
         utils.check_unit(length_unit, internal_unit)
+        
+        if fil_idxs is None:
+            fil_idxs = [fil.idx for fil in self.fils]
 
         #Figure properties
         nsols = len(fil_idxs)
@@ -1292,10 +1295,6 @@ class Network:
             ax.set_title(**kwargs["title"])
 
         ############### Plotting start ################
-
-        if fil_idxs is None:
-
-            fil_idxs = [fil.idx for fil in self.fils]
 
         for fil_idx, c in zip(fil_idxs, colors):
 
