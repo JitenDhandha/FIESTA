@@ -1310,7 +1310,7 @@ class Network:
 
             if(cylinders):
 
-                if self.arepo_ids is None:
+                if fil.arepo_ids is None:
                     raise ValueError(utils._prestring() + "Filament needs to be characterized first using characterize_filament() function.")
                 if(avg is None):
                     raise ValueError(utils._prestring()+"Need to pass ArepoVoronoiGrid to plot the cylinders!")
