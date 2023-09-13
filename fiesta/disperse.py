@@ -1351,3 +1351,5 @@ class Network:
 
         if save is not None:
             fig.savefig(save, bbox_inches='tight', dpi=100)
+            
+        return fig
