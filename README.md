@@ -36,10 +36,11 @@ by Jiten Dhandha and Zoe Faes under the supervision of Rowan J. Smith.
 The code is released under GNU General Public License v3.0, 
 which means it can be freely used, shared, modified and distributed. For more details on
 the filament characterization algorithms, please see the associated paper 
-[Dhandha, Faes & Smith (2023)](https://arxiv.org/abs/2307.12428) where the code was first introduced.
-If you use the code in your own publication, please cite Dhandha, Faes & Smith (2023).
+[Dhandha, Faes & Smith (2024)](https://ui.adsabs.harvard.edu/abs/2024MNRAS.529.4699D/abstract) where the code was first introduced.
+If you use the code in your own publication, please cite the aforementioned paper.
 The paper is also accompanied by a data release on [Zenodo](https://doi.org/10.5281/zenodo.8176097),
-the analysis of which led to the development of this code.
+the analysis of which led to the development of this code. A tutorial/Jupyter notebook, presented at
+the 2023 AREPO ISM workshop, is also available online: [bit.ly/fiesta-astro](http://bit.ly/fiesta-astro).
 
 ## Installation
 
